@@ -96,7 +96,7 @@ const osThreadAttr_t I2C_Attr = {
 void TIM2_IRQHandler(void) {
   if (TIM2->SR & TIM_SR_UIF) { // Check status register for update interrupt flag
     TIM2->SR &= ~(TIM_SR_UIF); // Reset the update interrupt flag
-    Toggle_Pin(GPIOD, 15); // Toggle the LED output pin.
+    Toggle_Pin(GPIOD, 15);  // Toggle the LED output pin.
   }
 }
 
