@@ -7,6 +7,7 @@
 ***********************************************/
 
 #include "stm32f407xx.h"
+#include "can.h"
 
 /**
  * @brief Initializes CAN1
@@ -26,6 +27,26 @@ void CAN1_Init() {
     CAN1->MCR |= CAN_MCR_INRQ; // Request Initialization Mode
     while (!(CAN1->MSR & CAN_MSR_INAK)); // Wait until Initialization Mode is entered
 
+    // Configure CAN1
+    CAN1->MCR &= ~CAN_MCR_TXFP & ~CAN_MCR_NART & ~CAN_MCR_RFLM 
+                & ~CAN_MCR_TTCM & ~CAN_MCR_ABOM;
+    
     // http://www.bittiming.can-wiki.info/
-    CAN1->BTR = 0x001a0005; // Set Baud Rate to 500kbps
+    // Sample Point at 85.7% Reg Value = 0x001a0005
+    // CAN1->BTR = 0x001a0005; // Set Baud Rate to 500kbps
+    CAN1->BTR |= (6u << CAN_BTR_BRP_Pos) | (11u << CAN_BTR_TS1_Pos) 
+                | (2u << CAN_BTR_TS2_Pos) | (1u << CAN_BTR_SJW_Pos);
+    // TODO: Loopback Mode For Testing
+    CAN1->BTR |= CAN_BTR_LBKM; // Loopback Mode
+    CAN1->MCR &= ~CAN_MCR_INRQ; // Exit Initialization Mode
+    while (CAN1->MSR & CAN_MSR_INAK); // Wait until Normal Mode is entered
+}
+
+/**
+ * @brief Transmit a CAN Frame
+ * 
+ * @param frame [CAN_Frame*] Frame struct to transmit
+ */
+void CAN1_Transmit(CAN_Frame* frame) {
+    //TODO: Implement
 }
