@@ -8,9 +8,22 @@
 
 #include "stm32f407xx.h"
 
+typedef enum {
+    CAN_RTR_Data,
+    CAN_RTR_Remote
+} CAN_RTR;
+
+typedef enum {
+    CAN_OK,
+    CAN_TX_Req,
+    CAN_Error,
+    CAN_Mailbox_Error
+} CAN_Status;
+
 typedef struct {
     uint16_t id; // 11-bit ID
     uint8_t dlc; // Data Length Code
+    CAN_RTR rtr; // Remote Transmission Request
     uint8_t data[8]; // Data Bytes
 } CAN_Frame;
 
@@ -27,4 +40,4 @@ void CAN1_Init();
  * 
  * @param frame [CAN_Frame*] Frame to transmit
  */
-void CAN1_Transmit(CAN_Frame* frame);
+CAN_Status CAN_Transmit(CAN_TypeDef* CAN, CAN_Frame* frame);

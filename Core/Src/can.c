@@ -9,6 +9,18 @@
 #include "stm32f407xx.h"
 #include "can.h"
 
+static uint8_t Get_Empty_Mailbox() {
+    if (CAN1->TSR & CAN_TSR_TME0) {
+        return 0u;
+    } else if (CAN1->TSR & CAN_TSR_TME1) {
+        return 1u;
+    } else if (CAN1->TSR & CAN_TSR_TME2) {
+        return 2u;
+    } else {
+        return 0xFFu;
+    }
+}
+
 /**
  * @brief Initializes CAN1
  * 
@@ -47,6 +59,26 @@ void CAN1_Init() {
  * 
  * @param frame [CAN_Frame*] Frame struct to transmit
  */
-void CAN1_Transmit(CAN_Frame* frame) {
-    //TODO: Implement
+CAN_Status CAN_Transmit(CAN_TypeDef* CAN, CAN_Frame* frame) {
+    uint8_t mailbox = Get_Empty_Mailbox();
+    if (mailbox == 0xFFu) {
+        return CAN_Mailbox_Error;
+    }
+
+    // Set ID, DLC, Frame Type, and Data
+    CAN->sTxMailBox[mailbox].TIR = 0x0UL; // Clear the mailbox register
+    CAN->sTxMailBox[mailbox].TIR |= (frame->id << CAN_TI0R_STID_Pos)
+                                    | (frame->rtr << CAN_TI0R_RTR_Pos);
+    CAN->sTxMailBox[mailbox].TDTR = (frame->dlc << CAN_TDT0R_DLC_Pos);
+    CAN->sTxMailBox[mailbox].TDLR = (frame->data[0] << CAN_TDL0R_DATA0_Pos) 
+                                    | (frame->data[1] << CAN_TDL0R_DATA1_Pos)
+                                    | (frame->data[2] << CAN_TDL0R_DATA2_Pos) 
+                                    | (frame->data[3] << CAN_TDL0R_DATA3_Pos);
+    CAN->sTxMailBox[mailbox].TDHR = (frame->data[4] << CAN_TDH0R_DATA4_Pos) 
+                                    | (frame->data[5] << CAN_TDH0R_DATA5_Pos) 
+                                    | (frame->data[6] << CAN_TDH0R_DATA6_Pos) 
+                                    | (frame->data[7] << CAN_TDH0R_DATA7_Pos);
+    // Request Transmission
+    CAN->sTxMailBox[mailbox].TIR |= CAN_TI0R_TXRQ;
+    return CAN_TX_Req;
 }
