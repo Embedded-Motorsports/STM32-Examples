@@ -47,6 +47,7 @@ Core/Src/timer.c \
 Core/Src/uart.c \
 Core/Src/i2c.c \
 Core/Src/sysclk.c \
+Core/Src/can.c \
 FATFS/Target/user_diskio.c \
 FATFS/App/fatfs.c \
 Core/Src/system_stm32f4xx.c \

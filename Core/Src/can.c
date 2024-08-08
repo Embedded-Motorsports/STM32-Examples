@@ -57,7 +57,9 @@ void CAN1_Init() {
 /**
  * @brief Transmit a CAN Frame
  * 
- * @param frame [CAN_Frame*] Frame struct to transmit
+ * @param CAN [CAN_TypeDef*] CAN Peripheral to receive from
+ * @param frame [CAN_Frame*] Frame to transmit
+ * @return [CAN_Status] Status of Transmission
  */
 CAN_Status CAN_Transmit(CAN_TypeDef* CAN, CAN_Frame* frame) {
     uint8_t mailbox = Get_Empty_Mailbox();
@@ -82,3 +84,27 @@ CAN_Status CAN_Transmit(CAN_TypeDef* CAN, CAN_Frame* frame) {
     CAN->sTxMailBox[mailbox].TIR |= CAN_TI0R_TXRQ;
     return CAN_TX_Req;
 }
+
+/**
+ * @brief Receive a CAN Frame
+ * @note Only populates id and data fields
+ * 
+ * @param CAN [CAN_TypeDef*] CAN Peripheral to receive from
+ * @param frame [CAN_Frame*] Frame struct to receive
+ * @return [CAN_Status] Status of Reception
+ */
+CAN_Status CAN_Receive(CAN_TypeDef* CAN, CAN_Frame* frame) {
+    if ((CAN->RF0R & CAN_RF0R_FMP0) == 0x1) {
+        frame->id = (CAN->sFIFOMailBox[0].RIR & CAN_RI0R_STID_Msk) >> CAN_RI0R_STID_Pos;
+        
+        for (int i = 0; i < 4; i++) {
+            frame->data[i] = (CAN->sFIFOMailBox[0].RDLR >> (i * 8)) & 0xFF;
+        }
+        for (int i = 0; i < 4; i++) {
+            frame->data[i + 4] = (CAN->sFIFOMailBox[0].RDHR >> (i * 8)) & 0xFF;
+        }
+        CAN->RF0R |= CAN_RF0R_RFOM0; // Release FIFO 0
+        return CAN_OK;
+    }
+}
+    

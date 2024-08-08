@@ -38,6 +38,17 @@ void CAN1_Init();
 /**
  * @brief Transmit a CAN Frame
  * 
+ * @param CAN [CAN_TypeDef*] CAN Peripheral to receive from
  * @param frame [CAN_Frame*] Frame to transmit
+ * @return [CAN_Status] Status of Transmission
  */
 CAN_Status CAN_Transmit(CAN_TypeDef* CAN, CAN_Frame* frame);
+
+/**
+ * @brief Receive a CAN Frame
+ * 
+ * @param CAN [CAN_TypeDef*] CAN Peripheral to receive from
+ * @param frame [CAN_Frame*] Frame struct to receive
+ * @return [CAN_Status] Status of Reception
+ */
+CAN_Status CAN_Receive(CAN_TypeDef* CAN, CAN_Frame* frame);

@@ -18,19 +18,11 @@
 #include "adc.h"
 #include "spi.h"
 #include "i2c.h"
+#include "can.h"
 
 #define HSE_VALUE 8000000U
 
 #define SPI_CS 12
-
-// Data Frames
-/*----------------------------------------------------------------*/
-// Possible Idea to make Structs for each type of Data Frame used (CAN, SPI, etc)
-// Should go in a defines file as opposed to main
-typedef struct {
-  uint8_t command;
-  uint8_t data;
-} SPI_Frame;
 
 // Global Variables
 /*----------------------------------------------------------------*/
@@ -46,6 +38,7 @@ void USART_Print(void *argument);
 void SPI_Send(void *argument);
 void Status_LED(void *argument);
 void I2C_Send(void *argument);
+void CAN_Task(void *argument);
 
 
 // FreeRTOS Threads
@@ -89,6 +82,13 @@ const osThreadAttr_t I2C_Attr = {
   .priority = osPriorityNormal
 };
 
+osThreadId_t CAN_Handle;
+const osThreadAttr_t CAN_Attr = {
+  .name = "CAN_Task",
+  .stack_size = 128 * 4,
+  .priority = osPriorityNormal
+};
+
 /**
  * @brief Handle Timer 2 Interrupt
  * 
@@ -115,6 +115,7 @@ int main() {
   DMA_ADC1_Init(adc_buffer);
   SPI2_Init();
   I2C1_Init();
+  CAN1_Init();
 
   uint8_t ADC_Val[32];
 
@@ -125,6 +126,7 @@ int main() {
   Status_LED_Handle = osThreadNew(Status_LED, NULL, &Status_LED_Attr);
   SPI_Send_Handle = osThreadNew(SPI_Send, NULL, &SPI_Attr);
   I2C_Send_Handle = osThreadNew(I2C_Send, NULL, &I2C_Attr);
+  CAN_Handle = osThreadNew(CAN_Task, NULL, &CAN_Attr);
 
   osKernelStart(); // Start FreeRTOS
 
@@ -205,6 +207,23 @@ void I2C_Send(void *argument) {
     sprintf(DegC, "IMU Temp: %d\n", temp);
     send_String(USART3, DegC);
     osDelay(50);
+  }
+}
+
+void CAN_Task(void *argument) {
+  uint8_t frame_data[8] = "Hello";
+  CAN_Frame Recv;
+  CAN_Frame Send = {
+    .id = 0x148,
+    .dlc = 8,
+    .rtr = CAN_RTR_Data,
+    .data = frame_data
+  };
+  while(1) {
+    CAN_Transmit(CAN1, &Send);
+    osDelay(1);
+    CAN_Receive(CAN1, &Recv);
+    osDelay(100);
   }
 }
 
